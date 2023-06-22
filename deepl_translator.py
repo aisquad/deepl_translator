@@ -15,6 +15,7 @@ class Translator:
         self.resources_path: Optional[Path] = None
         self.json_path: Optional[Path] = None
         self.source_path: Optional[Path] = None
+        self.translated_source_path: Optional[Path] = None
         self.raw_path: Optional[Path] = None
         self.start_date: Optional[datetime] = None
         self.deepl: Any = deepl.Translator(self.auth_key)
@@ -24,7 +25,7 @@ class Translator:
         self.source_items = set()
         self.target_items = []
         self.pattern = re.compile(
-            r'(?P<bath><source>(?P<source>[^<]+)</source>\s+(?P<target><target state="needs-translation"/>))',
+            r'(?P<both><source>(?P<source>[^<]+)</source>\s+(?P<target><target state="needs-translation"/>))',
             re.S
         )
         self._set_paths()
@@ -41,6 +42,7 @@ class Translator:
         self.json_path = self.resources_path.joinpath('deepl.json')
         if args.source:
             self.source_path = self.resources_path.joinpath(f'{args.source}.xlf')
+            self.translated_source_path = self.resources_path.joinpath(f'{args.source}.translated.xlf')
         else:
             raise NameError('Se debe proporcionar un fichero fuente con la opción -f')
         self.raw_path = self.resources_path.joinpath(f'translations_{datetime.now():%Y-%m-%d_%H-%M-%S}.txt')
@@ -91,7 +93,7 @@ class Translator:
             new = f'<source>{k}</source>{new_line:<11}<target>{v}</target>'
             target_text = target_text.replace(old, new)
 
-        with open(fr'resources/{args.source}.translated.xlf', 'w', encoding='utf8') as fp:
+        with self.translated_source_path.open('w') as fp:
             fp.write(target_text)
 
     def main(self):
