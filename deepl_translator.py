@@ -24,9 +24,13 @@ class Translator:
         self.source = ''
         self.source_items = set()
         self.target_items = []
-        self.pattern = re.compile(
+        self.search_pattern = re.compile(
             r'(?P<both><source>(?P<source>[^<]+)</source>\s+(?P<target><target state="needs-translation"/>))',
             re.S
+        )
+        self.done_pattern = re.compile(
+            r'<source>(?P<source>.+)</source>\s+?<target>(?P<target>.+)</target>',
+            re.UNICODE
         )
         self._set_paths()
 
@@ -67,16 +71,28 @@ class Translator:
             json.dump(data, fp)
 
     def read_source(self):
-        with self.source_path.open('r') as f:
+        with self.source_path.open('r', encoding='utf8') as f:
             self.source = f.read()
+
+    def read_and_show(self):
+        self.read_source()
+        self.get_untranslated_items()
+        items = '\n'.join(self.source_items)
+        print(items)
+        print(f'items: {len(self.source_items)} size: {len(items)}')
 
     def get_untranslated_items(self):
         sources = set()
         skip = ('Cantidad', 'Descripción', 'Unidad de medida', 'Total', 'Subtotal')
-        for items in self.pattern.finditer(self.source):
+        for items in self.search_pattern.finditer(self.source):
             expr, source, target = items.groups()
             sources.add(source)
         sources = sources.difference(skip)
+        old_sources = len(sources)
+        known_translations = self.collect_translations()
+        sources.difference_update(known_translations.keys())
+        if len(sources) == 0 and old_sources > 0:
+            raise IndexError('Ya se han traducido todas las expresiones.')
         self.source_items = list(sorted(sources))
 
     def save_raw(self):
@@ -93,13 +109,30 @@ class Translator:
             new = f'<source>{k}</source>{new_line:<11}<target>{v}</target>'
             target_text = target_text.replace(old, new)
 
-        with self.translated_source_path.open('w') as fp:
+        with self.translated_source_path.open('w', encoding='utf8') as fp:
             fp.write(target_text)
+
+    def collect_translations(self):
+        if not self.translated_source_path.exists():
+            raise FileNotFoundError('No se encontró el fichero fuente.')
+        with self.translated_source_path.open('r', encoding='utf8') as fp:
+            text = fp.read()
+        translations_list = self.done_pattern.findall(text)
+        translations_list.sort(key=lambda it: it[0])
+        translations = {k: v for k, v in dict(translations_list).items()}
+        return translations
+
+    def test(self):
+        self.load()
+        self.read_source()
+        self.get_untranslated_items()
+        print(self.source_items)
 
     def main(self):
         self.load()
         self.read_source()
         self.get_untranslated_items()
+        self.collect_translations()
         source = '\n'.join(self.source_items)
         length = len(source)
         if self.max_chars_per_month <= self.sent_chars + length:
@@ -120,11 +153,22 @@ class Translator:
 
 if __name__ == '__main__':
     parser = ArgumentParser()
+    parser.add_argument('-c', '--collect', dest='collect', action="store_true")
     parser.add_argument('-f', '--filename', '--source', dest='source')
     parser.add_argument('-k', '--deepl', '--authkey', dest='deepl_authkey')
+    parser.add_argument('-r', '--read', dest='read', action="store_true")
     parser.add_argument('-s', '--sourcelang', dest='source_lang')
     parser.add_argument('-t', '--targetlang', dest='target_lang')
+    parser.add_argument('-T', '--translate', dest='translate')
+    parser.add_argument('-x', '--test', dest='test', action="store_true")
     args = parser.parse_args()
 
     translator = Translator()
-    translator.main()
+    if args.read:
+        translator.read_and_show()
+    elif args.collect:
+        translator.collect_translations()
+    elif args.test:
+        translator.test()
+    elif args.translate:
+        translator.main()
