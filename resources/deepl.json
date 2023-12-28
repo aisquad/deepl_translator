@@ -1,0 +1,31 @@
+[
+  {
+    "max_chars_per_month": 500000,
+    "sent_chars": 21309,
+    "date": "2023-07-24 09:50"
+  },
+  {
+    "max_chars_per_month": 500000,
+    "sent_chars": 15750,
+    "date": "2023-07-24 09:50",
+    "last": "2023-07-24 10:13"
+  },
+  {
+    "max_chars_per_month": 500000,
+    "sent_chars": 21309,
+    "date": "2023-12-18 11:11",
+    "last": "2023-12-18 11:11"
+  },
+  {
+    "max_chars_per_month": 500000,
+    "sent_chars": 26173,
+    "date": "2023-12-18 11:11",
+    "last": "2023-12-27 11:51"
+  },
+  {
+    "max_chars_per_month": 500000,
+    "sent_chars": 26187,
+    "date": "2023-12-18 11:11",
+    "last": "2023-12-27 14:02"
+  }
+]
