@@ -283,6 +283,9 @@ if __name__ == '__main__':
     2.- Ejecutamos --read,
         Si hay expresiones que no queremos mandar a traducir a Deepl las introducimos en skip_expressions.txt
         una por línea. (Por ejemplo, expresiones que ya están en castellano.)
+    
+    2.1.- Si usamos los comentarios para dejar la traducción que nos interese podemos añadir el parámetro --usecomments
+    a la línea de órdenes. La sintaxis para el comentario debe ser: comment = 'es-ES="traducción"';  
         
     3.- Ejecutamos --translate. Esta orden le manda al API de Deepl las expresiones que tenemos que traducir, hay que
     tener en cuenta que son 500.000 carácteres al mes, el recuento se hace en deepl.json.
@@ -290,5 +293,10 @@ if __name__ == '__main__':
     4.- Leemos de nuevo, si alguna expresión está mal, añadimos en fixes.json la expr. incorrecta y la corrección que
     queremos que se haga a modo de clave valor. Una vez las hemos obtenido, ejecutamos --fixes.
         A modo de ejemplo, los «DISC.» no los traducía y los pasé a «DTO.».
+        
+    NOTA 1: La traducción por defecto es de castellano a inglés, para cambiarlo podemos usar --sourcelang y --targetlang
+    en la línea de órdenes.
     
+    NOTA 2: Por defecto no se mantienen las traducciones ya hechas, es decir aquellas con las etiquetas <target></target>
+    Hay que añadir el parámetro --keep
     """
