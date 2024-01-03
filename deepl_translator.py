@@ -52,6 +52,7 @@ class DeeplTranslator:
         self.history = DeeplHistory()
         self.source_path: Optional[Path] = None
         self.translated_source_path: Optional[Path] = None
+        self.translated_tradnl_source_path: Optional[Path] = None
         self.raw_path: Optional[Path] = None
         self.start_date: Optional[datetime] = None
         self.deepl: Any = deepl.Translator(self.auth_key)
@@ -93,6 +94,8 @@ class DeeplTranslator:
         if args.source:
             self.source_path = self.resources_path.joinpath(f'{args.source}.xlf')
             self.translated_source_path = self.resources_path.joinpath(f'{args.source}.translated.xlf')
+            if args.traditional_spanish:
+                self.translated_tradnl_source_path = self.resources_path.joinpath(f'{args.source}_tradnl.xlf')
         else:
             raise NameError('Se debe proporcionar un fichero fuente con la opción -f')
         self.raw_path = self.resources_path.joinpath(f'translations_{datetime.now():%Y-%m-%d_%H-%M-%S}.txt')
@@ -234,16 +237,24 @@ class DeeplTranslator:
         with self.translated_source_path.open('w', encoding='utf8') as fp:
             fp.write(self.source)
 
+    def add_traditional_spanish_version(self):
+        with self.translated_source_path.open('r', encoding='utf8') as fp:
+            text = fp.read()
+        if text:
+            with self.translated_tradnl_source_path.open('w', encoding='utf8') as fp2:
+                fp2.write(text)
+
 
 if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('-c', '--collect', dest='collect', action="store_true")
+    parser.add_argument('-E', '--envfilename', '--envsource', dest='source_in_env', action="store_true")
     parser.add_argument('-f', '--filename', '--source', dest='source')
-    parser.add_argument('-F', '--envfilename', '--envsource', dest='source_in_env', action="store_true")
     parser.add_argument('-k', '--deepl', '--authkey', dest='deepl_authkey')
     parser.add_argument('-K', '--keep', action="store_true", dest='keep_known_translations')
     parser.add_argument('-r', '--read', dest='read', action="store_true")
     parser.add_argument('-s', '--sourcelang', dest='source_lang')
+    parser.add_argument('-S', '--tradnlspanish', dest='traditional_spanish', action="store_true")
     parser.add_argument('-t', '--targetlang', dest='target_lang')
     parser.add_argument('-T', '--translate', dest='translate', action="store_true")
     parser.add_argument('-u', '--usecomments', dest='use_comments', action="store_true")
@@ -266,6 +277,8 @@ if __name__ == '__main__':
         translator.use_comments()
     elif args.translate:
         translator.main()
+    if args.traditional_spanish:
+        translator.add_traditional_spanish_version()
 
     """
     ### Configuración ###
@@ -298,5 +311,5 @@ if __name__ == '__main__':
     en la línea de órdenes.
     
     NOTA 2: Por defecto no se mantienen las traducciones ya hechas, es decir aquellas con las etiquetas <target></target>
-    Hay que añadir el parámetro --keep
+    Hay que añadir el parámetro --keep, con lo cual solo traduciría las etiquetas <target status="needs-*"/>.
     """
