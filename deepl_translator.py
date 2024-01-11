@@ -238,11 +238,12 @@ class DeeplTranslator:
             fp.write(self.source)
 
     def add_traditional_spanish_version(self):
-        with self.translated_source_path.open('r', encoding='utf8') as fp:
-            text = fp.read()
+        with self.translated_source_path.open('r', encoding='utf8') as fp_r:
+            text = fp_r.read()
+            text = text.replace('target-language="es-ES"', 'target-language="es-ES_tradnl"', 1)
         if text:
-            with self.translated_tradnl_source_path.open('w', encoding='utf8') as fp2:
-                fp2.write(text)
+            with self.translated_tradnl_source_path.open('w', encoding='utf8') as fp_w:
+                fp_w.write(text)
 
 
 if __name__ == '__main__':
